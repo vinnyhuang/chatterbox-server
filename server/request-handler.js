@@ -11,8 +11,8 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var messages = [];
-var requestHandler = function(request, response) {
+const messages = [];
+const requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -27,28 +27,30 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  console.log(`Serving request type ${request.method} for url ${request.url}`);
   
   if (request.method === 'GET') {
     handleGET(request, response);
   } else if (request.method === 'POST') {
     handlePOST(request, response);
+  } else if (request.method === 'OPTIONS') {
+    handleOPTIONS(request, response);
   }
 };
 
-var handleGET = function(request, response) {
-  var headers = Object.assign({}, defaultCorsHeaders);
+const handleGET = function(request, response) {
+  const headers = Object.assign({}, defaultCorsHeaders);
 
   if (request.url.includes('/classes/messages')) {
-    var statusCode = 200;
+    const statusCode = 200;
     headers['Content-Type'] = 'text/json';
-    var responseData = JSON.stringify({ results: messages });
+    const responseData = JSON.stringify({ results: messages });
 
     response.writeHead(statusCode, headers);
     response.end(responseData);
   } else {
     // The outgoing status.
-    var statusCode = 404;
+    const statusCode = 404;
 
     // See the note below about CORS headers.
 
@@ -73,22 +75,25 @@ var handleGET = function(request, response) {
   }
 };
 
-var handlePOST = function(request, response) {
-  var headers = Object.assign({}, defaultCorsHeaders);
-  var statusCode = 201;
+const handlePOST = function(request, response) {
+  const headers = Object.assign({}, defaultCorsHeaders);
+  const statusCode = 201;
   headers['Content-Type'] = 'text/json';
 
-  var responseJSONstring = '';
-  request.on('data', function(chunk) {
-    responseJSONstring += chunk.toString();
-  });
-  request.on('end', function() {
+  let responseJSONstring = '';
+  request.on('data', chunk => responseJSONstring += chunk.toString());
+  request.on('end', () => {
     messages.push(JSON.parse(responseJSONstring));
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify('yo we got that shit'));
   });
 };
 
+const handleOPTIONS = function(request, response) {
+  const statusCode = 200;
+  response.writeHead(statusCode, defaultCorsHeaders);
+  response.end();
+};
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -99,7 +104,7 @@ var handlePOST = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
+const defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',

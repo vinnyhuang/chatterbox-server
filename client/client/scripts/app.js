@@ -1,7 +1,7 @@
 // YOUR CODE HERE:
 
 var app = {
-  server: 'https://api.parse.com/1/classes/messages',
+  server: 'http://127.0.0.1:3000/classes/messages',
   myUser: undefined,
   users: {},
   chatrooms: {lobby: true},
