@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>chatterbox</title>
+    <link rel="stylesheet" href="styles/styles.css">
+
+    <!-- dependencies -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/underscore/underscore.js"></script>
+    <!-- your scripts -->
+    <script src="env/config.js"></script>
+    <script src="scripts/app.js"></script>
+  </head>
+  <body>
+    <div id="main">
+      <h1>chatterbox</h1>
+      <!-- Your HTML goes here! -->
+
+
+      <!--<form action="#" id="send" method="post">
+        <input type="text" name="message" id="message"/>
+        <input type="submit" name="submit" class="submit"/>
+      </form>-->
+
+      <div id="send">
+        <form class="submit">
+          <input id="message" type="text">
+          <input type="submit" name="submit" value="send">
+        </form>
+      </div>
+      <ul id="tabList">
+        <li><a class="tab selected">lobby</a></li>
+        <li><a id="newTab">+</a></li>
+        <li><a id="removeTab">-</a></li>
+      </ul>
+
+      <form id="selector">
+        <label>Choose Room
+          <select name="room" id="roomSelect">
+            <option>lobby</option>
+            <option class="newChatRoom">create new room</option>
+          </select>
+        </label>
+      </form>
+
+      <form id="createNewRoom">
+        <input class='roomNameInput' type='text'>
+        <input type="submit" name="submit" value="create new room">
+      </form>
+      <!-- <button class="newTab">Create New Tag</button> -->
+      <!-- <div class="tabcontent"><p>hello world</p></div> -->
+      <!--<button type="button" id="sendButton">send</button>-->
+    </div>
+    <div id="chats"></div>
+  </body>
+</html>
