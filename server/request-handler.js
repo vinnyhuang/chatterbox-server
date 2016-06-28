@@ -1,14 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const SERVER_ROOT_PATH = 'server-root';
-const CLIENT_PATH = '../client/';
+const SERVER_ROOT_PATH = '../client/client/';
+const ROOT_DEFAULT_FILE = 'index.html';
+const DEFAULT_CONTENT_TYPE = 'text/json';
 const CONTENT_TYPES = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.css': 'text/css'
 };
-const DEFAULT_CONTENT_TYPE = 'text/json';
 
 const messages = [];
 
@@ -25,36 +25,35 @@ const requestHandler = function(request, response) {
 };
 
 const handleGET = function(request, response) {
-  if (request.url === '/') {
-    // serve index.html
+  const pathObject = path.parse(request.url);
+  const absolutePath = path.join(
+    __dirname,
+    SERVER_ROOT_PATH,
+    pathObject.dir === '/' ? ROOT_DEFAULT_FILE : request.url
+  );
+  const extension = path.extname(absolutePath);
 
-  } else {  
-    const pathObject = path.parse(request.url);
-    const absolutePath = path.join(__dirname, SERVER_ROOT_PATH, request.url);
-
-    fs.exists(absolutePath, function(exists) {
-      if (exists) {
+  fs.exists(absolutePath, function(exists) {
+    if (exists) {
+      fs.readFile(absolutePath, 'utf-8', (error, data) => {
+        if (error) { throw error; }
+        
         const statusCode = 200;
         const headers = Object.assign({}, defaultCorsHeaders);
-        headers['Content-Type'] = pathObject.extname in CONTENT_TYPES ?
-          CONTENT_TYPES[pathObject.extname] : DEFAULT_CONTENT_TYPE;
-
-        fs.readFile(absolutePath, 'utf-8', (error, data) => {
-          if (error) { throw error; }
-          response.writeHead(statusCode, headers);
-          response.end(data);
-        });
-      } else {
-        // 404 not found
-        const statusCode = 404;
-        const headers = defaultCorsHeaders;
-        const responseData = 'Resource not found yo';
+        headers['Content-Type'] = extension in CONTENT_TYPES ? CONTENT_TYPES[extension] : DEFAULT_CONTENT_TYPE;
 
         response.writeHead(statusCode, headers);
-        response.end(responseData);
-      }
-    });
-  }
+        response.end(data);
+      });
+    } else {
+      const statusCode = 404;
+      const headers = defaultCorsHeaders;
+      const responseData = 'Resource not found yo';
+
+      response.writeHead(statusCode, headers);
+      response.end(responseData);
+    }
+  });
 };
 
 const handlePOST = function(request, response) {
