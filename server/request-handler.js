@@ -2,15 +2,13 @@ const fs = require('fs');
 const path = require('path');
 
 const SERVER_ROOT_PATH = '../client/client/';
-const ROOT_DEFAULT_FILE = 'index.html';
+const DEFAULT_INDEX_PAGE = 'index.html';
 const DEFAULT_CONTENT_TYPE = 'text/json';
 const CONTENT_TYPES = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.css': 'text/css'
 };
-
-const messages = [];
 
 const requestHandler = function(request, response) {
   console.log(`Serving request type ${request.method} for url ${request.url}`);
@@ -27,47 +25,62 @@ const requestHandler = function(request, response) {
 const handleGET = function(request, response) {
   const pathObject = path.parse(request.url);
   const absolutePath = path.join(
-    __dirname,
-    SERVER_ROOT_PATH,
-    pathObject.dir === '/' ? ROOT_DEFAULT_FILE : request.url
+      __dirname,
+      SERVER_ROOT_PATH,
+      pathObject.dir === '/' ? DEFAULT_INDEX_PAGE : request.url
   );
   const extension = path.extname(absolutePath);
 
-  fs.exists(absolutePath, function(exists) {
-    if (exists) {
-      fs.readFile(absolutePath, 'utf-8', (error, data) => {
-        if (error) { throw error; }
-        
-        const statusCode = 200;
-        const headers = Object.assign({}, defaultCorsHeaders);
-        headers['Content-Type'] = extension in CONTENT_TYPES ? CONTENT_TYPES[extension] : DEFAULT_CONTENT_TYPE;
+  fs.readFile(absolutePath, 'utf-8', function(error, data) {
+    let statusCode, responseData;
+    const headers = Object.assign({}, defaultCorsHeaders);
 
-        response.writeHead(statusCode, headers);
-        response.end(data);
-      });
+    if (!error) {
+      statusCode = 200;
+      headers['Content-Type'] = extension in CONTENT_TYPES ? CONTENT_TYPES[extension] : DEFAULT_CONTENT_TYPE;
+      responseData = data;
     } else {
-      const statusCode = 404;
-      const headers = defaultCorsHeaders;
-      const responseData = 'Resource not found yo';
-
-      response.writeHead(statusCode, headers);
-      response.end(responseData);
+      statusCode = 404;
+      responseData = 'Resource not found yo';
     }
+    response.writeHead(statusCode, headers);
+    response.end(responseData);
   });
 };
 
 const handlePOST = function(request, response) {
+  const pathObject = path.parse(request.url);
+  const absolutePath = path.join(
+      __dirname,
+      SERVER_ROOT_PATH,
+      pathObject.dir === '/' ? DEFAULT_INDEX_PAGE : request.url
+  );
+  const extension = path.extname(absolutePath);
+
   const headers = Object.assign({}, defaultCorsHeaders);
   const statusCode = 201;
   headers['Content-Type'] = 'text/json';
 
-  let responseJSONstring = '';
-  request.on('data', chunk => responseJSONstring += chunk.toString());
-  request.on('end', () => {
-    messages.push(JSON.parse(responseJSONstring));
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify('yo we got that shit'));
+  fs.readFile(absolutePath, 'utf-8', function(error, data) {
+    if (error) { throw error; }
+
+    const messages = JSON.parse(data).results;
+
+    let responseJSONstring = '';
+    request.on('data', chunk => responseJSONstring += chunk.toString());
+    request.on('end', function() {
+      messages.push(JSON.parse(responseJSONstring));
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify('yo we got that shit'));
+
+      fs.writeFile(absolutePath, JSON.stringify({results: messages}), 'utf-8', function(error) {
+        if (error) { throw error; }
+        console.log('Sync complete');
+      });
+    });
   });
+
+
 };
 
 const handleOPTIONS = function(request, response) {
